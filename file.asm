@@ -18,8 +18,8 @@
     word_counter dw 0
 
     fdesc dw 0
-    read_pos dw 0
-    write_pos dw 0
+    read_pos dd 0
+    write_pos dd 0
 
     base dw 10
 
@@ -138,23 +138,28 @@ main:
 
         read_file_chunk:  
         mov ah, 42h
-        mov cx, 0
-        mov dx, read_pos
+        mov cx, WORD PTR [offset read_pos]
+        mov dx, WORD PTR [offset read_pos + 2]
         mov al, 0  
+        mov bx, fdesc
         int 21h
         
         mov cx, chunk_size
         mov dx, offset chunk
         mov ah, 3Fh
+        mov bx, fdesc
         int 21h
         jc close_file
 
         cmp ax, 0
         je close_file 
         
-        mov cx, read_pos
-        add cx, ax
-        mov read_pos, cx
+        mov cx, WORD PTR [offset read_pos]
+        mov dx, WORD PTR [offset read_pos + 2]
+        add dx, ax
+        adc cx, 0
+        mov WORD PTR [offset read_pos], cx
+        mov WORD PTR [offset read_pos + 2], dx
 
         mov chunk_last, ax
         call process_chunk
@@ -251,8 +256,8 @@ main:
         pusha
 
         mov ah, 42h
-        mov cx, 0
-        mov dx, write_pos
+        mov cx, WORD PTR [offset write_pos]
+        mov dx, WORD PTR [offset write_pos + 2]
         mov al, 0  
         mov bx, fdesc  
         int 21h
@@ -263,10 +268,13 @@ main:
         mov dx, offset wordb
         int 21h 
         
-        mov ax, write_pos
-        mov cx, wordb_last
-        add ax, cx
-        mov write_pos, ax  
+        mov ax, wordb_last
+        mov cx, WORD PTR [offset write_pos]
+        mov dx, WORD PTR [offset write_pos + 2]
+        add dx, ax
+        adc cx, 0
+        mov WORD PTR [offset write_pos], cx
+        mov WORD PTR [offset write_pos + 2], dx 
         
         mov wordb_last, 0
 
